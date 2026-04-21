@@ -7,35 +7,61 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+model Clinic {
+  id            String         @id @default(cuid())
+  name          String
+  scans         Scan[]
+  notifications Notification[]
+  users         User[]
+  createdAt     DateTime       @default(now())
+}
+
 model Scan {
-  id        String   @id @default(cuid())
-  status    String   @default("pending") // pending, completed, failed
-  images    String   @default("") // Comma-separated list of image URLs (SQLite doesn't support scalar lists)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String    @id @default(cuid())
+  status       String    @default("pending") // pending, completed, failed
+  images       String    @default("") // Comma-separated list of image URLs (SQLite doesn't support scalar lists)
+  patientLabel String    @default("Unknown Patient")
+  clinicId     String
+  clinic       Clinic    @relation(fields: [clinicId], references: [id])
+  thread       Thread?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Notification {
   id        String   @id @default(cuid())
-  userId    String
-  title     String
+  type      String
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  clinicId  String
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Thread {
   id        String    @id @default(cuid())
-  patientId String
+  createdAt DateTime  @default(now())
+  scanId    String    @unique
+  scan      Scan      @relation(fields: [scanId], references: [id])
   messages  Message[]
-  updatedAt DateTime  @updatedAt
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  threadId  String
-  content   String
-  sender    String   // patient, dentist
-  createdAt DateTime @default(now())
-  thread    Thread   @relation(fields: [threadId], references: [id])
+  id       String   @id @default(cuid())
+  content  String
+  sentAt   DateTime @default(now())
+  threadId String
+  thread   Thread   @relation(fields: [threadId], references: [id])
+  senderId String
+  sender   User     @relation(fields: [senderId], references: [id])
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  role         String    @default("patient")
+  clinicId     String?
+  clinic       Clinic?   @relation(fields: [clinicId], references: [id])
+  sentMessages Message[]
+  createdAt    DateTime  @default(now())
 }

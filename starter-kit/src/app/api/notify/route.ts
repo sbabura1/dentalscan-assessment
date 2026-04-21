@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createScanNotification } from "@/lib/notifications";
+import prisma from "@/lib/prisma";
 
-const prisma = new PrismaClient();
+const DEFAULT_CLINIC_ID = "demo-clinic";
 
 /**
  * CHALLENGE: NOTIFICATION SYSTEM
@@ -16,13 +17,27 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { scanId, status } = body;
+    const clinicId =
+      typeof body.clinicId === "string" && body.clinicId.trim()
+        ? body.clinicId
+        : DEFAULT_CLINIC_ID;
+    const patientLabel =
+      typeof body.patientLabel === "string" && body.patientLabel.trim()
+        ? body.patientLabel.trim()
+        : `Patient #${scanId ?? "pending"}`;
 
     if (status === "completed") {
-      // TODO: Implement the notification creation logic here
-      // example: await prisma.notification.create({ ... })
-      
-      console.log(`[STUB] Notification triggered for scan ${scanId}`);
-      
+      await prisma.clinic.upsert({
+        where: { id: clinicId },
+        update: {},
+        create: {
+          id: clinicId,
+          name: "Demo Dental Clinic",
+        },
+      });
+
+      await createScanNotification(clinicId, patientLabel);
+
       return NextResponse.json({ ok: true, message: "Notification triggered" });
     }
 
