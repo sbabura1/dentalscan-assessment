@@ -54,6 +54,19 @@ declare global {
   }
 }
 
+/**
+ * Renders a mouth-shaped guide overlay on the camera feed.
+ *
+ * Stability is detected by sampling grayscale pixel values from border regions
+ * of the video frame across intervals and comparing the difference between frames.
+ * Low average difference = stable (green), medium = steadying (amber), high = unstable (red).
+ *
+ * In production, DeviceMotion API or ML-based motion estimation would replace
+ * this canvas-sampling approach for more reliable results.
+ *
+ * Framing detection uses the experimental FaceDetector Web API where available,
+ * gracefully degrading to "unknown" state on unsupported browsers.
+ */
 const MouthGuideOverlay = memo(
   forwardRef<MouthGuideOverlayHandle, MouthGuideOverlayProps>(function MouthGuideOverlay(
     { onStabilityChange, onFramingChange, videoRef },

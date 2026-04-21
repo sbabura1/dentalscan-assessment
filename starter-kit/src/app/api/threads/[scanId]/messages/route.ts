@@ -31,7 +31,7 @@ export async function GET(
     });
 
     if (!thread) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ messages: [] });
     }
 
     return NextResponse.json({ messages: thread.messages });
